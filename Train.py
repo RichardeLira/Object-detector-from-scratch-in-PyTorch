@@ -1,6 +1,8 @@
 # import the necessary packages
 from cProfile import label
-from ObjectDetector import ObjectDetector
+from distutils.command.config import config
+from operator import le
+from ObjectDetector import objectDetector
 from Custom_tensor_dataset import CustomTensorDataset
 from Config import Config 
 from sklearn.preprocessing import LabelEncoder
@@ -72,3 +74,85 @@ for csvPath in paths.list_files(Config.ANNOTS_PATH, validExts=(".csv")):
 
 
 
+
+
+# convert the data, class labels, bounding boxes, and image paths to
+# NumPy arrays
+data = np.array(data, dtype="float32")
+labels = np.array(labels)
+bboxes = np.array(bboxes, dtype="float32")
+imagePaths = np.array(imagePaths)
+
+# Partition the data into trainig and testing splits using 80% of
+# the data for training and the reaming 20% for testing 
+
+split = train_test_split(data,labels,bboxes,imagePaths,test_size = 0.20, random_state=42)
+
+# unpack the data slipt 
+
+(trainImages, testImages) = split[:2]
+(trainLabels, testLabels) = split[2:4]
+(trainBBoxes, testBBoxes) = split[4:6]
+(trainPaths, testPaths) = split[6:]
+
+
+# Convert Numpy arrays to Pytorch Tensors    
+(trainImages, TestImages)  = torch.tensor(trainImages),torch.tensor(testImages)
+(trainLabels, TestLabels)  = torch.tensor(trainLabels),torch.tensor(testImages)
+(trainBBoxes, testBBoxes)  = torch.tensor(trainBBoxes),torch.tensor(testBBoxes)
+
+
+# define normalization transforms
+
+transforms = transforms.Compose([transforms.ToPILImage(),transforms.ToTensor(),transforms.Normalize(mean=Config.MEAN, std = Config.STD) ])
+
+
+# Convert NumPy Array to Pytorch datasets 
+
+trainDS = CustomTensorDataset((trainImages,trainLabels,trainBBoxes) , transforms=transforms)
+
+testDS = CustomTensorDataset((testImages,testLabels,testBBoxes) , transforms=transforms)
+
+print("[INFO] total training samples: {}...".format(len(trainDS)))
+print("[INFO] total test samples: {}...".format(len(testDS)))
+
+# calculate steps per epoch for training and validation set  
+trainSteps = len(trainDS) // Config.BATCH_SIZE
+valSteps = len(testDS) // Config.BATCH_SIZE
+
+
+trainLoader = DataLoader(trainDS, batch_size=Config.BATCH_SIZE, shuffle=True, num_workers=os.cpu_count(), pin_memory=Config.PIN_MEMORY)
+testLoader = DataLoader(testDS, batch_size=Config.BATCH_SIZE,num_workers=os.cpu_count(), pin_memory=Config.PIN_MEMORY)
+
+
+# write the testing image paths to disk so that we can use then
+# when evaluating/testing our object detector
+print("[INFO] saving testing image paths...")
+f = open(config.TEST_PATHS, "w")
+f.write("\n".join(testPaths))
+f.close()
+
+# load the ResNet50 network
+resnet = resnet50(pretrained=True)
+# freeze all ResNet50 layers so they will *not* be updated during the
+# training process
+for param in resnet.parameters():
+	param.requires_grad = False
+
+object_detector = objectDetector(resnet,len(le.classes_))
+object_detector = objectDetector.to(Config.DEVICE)
+
+# define our loss function 
+
+classLossFunc = CrossEntropyLoss()
+bboxesLossFunc = MSELoss()
+
+# initialize the optimzer, compile the model, and show the model 
+opt = Adam(object_detector.parameters(), lr=Config.INIT_LR)
+print(object_detector)
+
+# initialize a dictionary to store training history
+H = {"total_train_loss": [], "total_val_loss": [], "train_class_acc": [],
+	 "val_class_acc": []}
+
+     

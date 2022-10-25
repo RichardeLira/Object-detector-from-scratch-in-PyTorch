@@ -2,7 +2,7 @@
 
 from torch.utils.data import Dataset 
 
-class CustorTensorDataset(Dataset): 
+class CustomTensorDataset(Dataset): 
     def __init__(self,tensor,transforms=None) -> None:
         super().__init__()
         self.tensor = tensor 
