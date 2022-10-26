@@ -12,10 +12,10 @@ ANNOTS_PATH = os.path.sep.join([BASE_PATH, "annotations"])
 BASE_OUTPUT = "output"
 
 
-MODEL_PATH = os.path.join([BASE_OUTPUT, "detector.pth"])
-LE_PATH = os.path.join([BASE_OUTPUT, "le.pickle"])
-PLOTS_PATH = os.path.join([BASE_OUTPUT, "plots"])
-TEST_PATH = os.path.join([BASE_OUTPUT, "test_path.txt"])
+MODEL_PATH = os.path.sep.join([BASE_OUTPUT, "detector.pth"])
+LE_PATH = os.path.sep.join([BASE_OUTPUT, "le.pickle"])
+PLOTS_PATH = os.path.sep.join([BASE_OUTPUT, "plots"])
+TEST_PATH = os.path.sep.join([BASE_OUTPUT, "test_path.txt"])
 
 
 # Testing GPU is available   

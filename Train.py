@@ -1,6 +1,6 @@
 # import the necessary packages
 from cProfile import label
-from distutils.command.config import config
+import Config
 from operator import le
 from tracemalloc import start
 from ObjectDetector import objectDetector
@@ -129,7 +129,7 @@ testLoader = DataLoader(testDS, batch_size=Config.BATCH_SIZE,num_workers=os.cpu_
 # write the testing image paths to disk so that we can use then
 # when evaluating/testing our object detector
 print("[INFO] saving testing image paths...")
-f = open(config.TEST_PATHS, "w")
+f = open(Config.TEST_PATHS, "w")
 f.write("\n".join(testPaths))
 f.close()
 
@@ -234,7 +234,7 @@ for epoch in tqdm(range(Config.NUM_EPOCHS)):
 
 
     # print the model training and validation information
-    print("[INFO] EPOCH: {}/{}".format(config.NUM_EPOCHS))
+    print("[INFO] EPOCH: {}/{}".format(Config.NUM_EPOCHS))
     print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(avgTrainLoss, trainCorrect)) 
     endTime = time.time()
     print("[INFO] total time taken to train the model: {:.2f}s".format(endTime - startTime))
@@ -263,5 +263,5 @@ plt.ylabel("Loss/Accuracy")
 plt.legend(loc="lower left")
 
 # save the training plot
-plotPath = os.path.sep.join([config.PLOTS_PATH, "training.png"])
+plotPath = os.path.sep.join([Config.PLOTS_PATH, "training.png"])
 plt.savefig(plotPath)
