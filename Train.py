@@ -223,4 +223,45 @@ for epoch in tqdm(range(Config.NUM_EPOCHS)):
 
 
     # calculate the training and validation accuracy 
+    avgTrainAcc = trainCorrect / len(trainDS)
+    avgValAcc = valCorrect / len(testDS)
 
+    # uptdate our training history 
+    H["total_train_loss"].append(totalTrainLoss.cpu().detach().numpy())
+    H["train_class_acc"].append(trainCorrect)
+    H["total_val_loss"].append(avgValLoss.cpu().detach().numpy())
+    H["val_class_acc"].append(valCorrect)
+
+
+    # print the model training and validation information
+    print("[INFO] EPOCH: {}/{}".format(config.NUM_EPOCHS))
+    print("Train loss: {:.6f}, Train accuracy: {:.4f}".format(avgTrainLoss, trainCorrect)) 
+    endTime = time.time()
+    print("[INFO] total time taken to train the model: {:.2f}s".format(endTime - startTime))
+
+
+
+# serialize the model to disk 
+print("[INFO] saving object detector model...")
+torch.save(objectDetector, Config.MODEL_PATH)
+
+# serialize the label enconder to disk 
+print("[INFO] saving label encoder...")
+f = open(Config.LE_PATH, "wb")
+f.write(pickle.dump(le))
+f.close()
+
+plt.style.use("ggplot")
+plt.figure()
+plt.plot(H["total_train_loss"], label="total_train_loss")
+plt.plot(H["total_val_loss"], label="total_val_loss")
+plt.plot(H["train_class_acc"], label="train_class_acc")
+plt.plot(H["val_class_acc"], label="val_class_acc")
+plt.title("Total Training Loss and Classification Accuracy on Dataset")
+plt.xlabel("Epoch #")
+plt.ylabel("Loss/Accuracy")
+plt.legend(loc="lower left")
+
+# save the training plot
+plotPath = os.path.sep.join([config.PLOTS_PATH, "training.png"])
+plt.savefig(plotPath)
