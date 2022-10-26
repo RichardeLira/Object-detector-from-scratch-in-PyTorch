@@ -5,7 +5,7 @@ import os
 # define the base path to the input dataset and then use it to derive
 # the path to the input images and annotation CSV files
 
-BASE_PATH = "dataset"
+BASE_PATH = r"C:\Users\richa\OneDrive\Documentos\Object-detector-from-scratch-in-PyTorch"
 IMAGES_PATH = os.path.sep.join([BASE_PATH, "images"])
 ANNOTS_PATH = os.path.sep.join([BASE_PATH, "annotations"])
 
