@@ -2,6 +2,7 @@
 from cProfile import label
 from distutils.command.config import config
 from operator import le
+from tracemalloc import start
 from ObjectDetector import objectDetector
 from Custom_tensor_dataset import CustomTensorDataset
 from Config import Config 
@@ -139,8 +140,8 @@ resnet = resnet50(pretrained=True)
 for param in resnet.parameters():
 	param.requires_grad = False
 
-object_detector = objectDetector(resnet,len(le.classes_))
-object_detector = objectDetector.to(Config.DEVICE)
+objectDetector = objectDetector(resnet,len(le.classes_))
+objectDetector = objectDetector.to(Config.DEVICE)
 
 # define our loss function 
 
@@ -148,11 +149,78 @@ classLossFunc = CrossEntropyLoss()
 bboxesLossFunc = MSELoss()
 
 # initialize the optimzer, compile the model, and show the model 
-opt = Adam(object_detector.parameters(), lr=Config.INIT_LR)
-print(object_detector)
+opt = Adam(objectDetector.parameters(), lr=Config.INIT_LR)
+print(objectDetector)
 
 # initialize a dictionary to store training history
 H = {"total_train_loss": [], "total_val_loss": [], "train_class_acc": [],
 	 "val_class_acc": []}
 
-     
+
+# loop over epochs 
+
+
+startTime = time.time()
+
+for epoch in tqdm(range(Config.NUM_EPOCHS)):
+
+    print("[INFO] epoch: {}".format(epoch+1))
+
+    objectDetector.train()
+
+    # reset the loss counters
+    total_train_loss = 0
+    total_val_loss = 0
+
+    # Loop over training set 
+    for (images,labels,bboxes) in trainLoader:
+        # send the input to the divece 
+        (images,labels, bboxes) = ((images.to(Config.DEVICE)), labels.to(Config.DEVICE), bboxes.to(Config.DEVICE))
+
+
+        # perfome a forward pass and calculate the training loss 
+        predictions = objectDetector(images)
+        bboxesLoss = bboxesLossFunc(predictions[0], bboxes)
+        classLoss = classLossFunc(predictions[1], labels)
+        totalLoss = (Config.BBOX * bboxesLoss) + (Config.LABELS * classLoss)
+
+        # reset the gradients, perform backpropagation step, 
+        # and uptdate the weights 
+
+        opt.zero_grad()
+        totalLoss.backward()
+        opt.step()
+
+        totalTrainLoss = totalLoss + totalTrainLoss
+        trainCorrect = (predictions[1].argmax(1) == labels).type(torch.float).sum().item() + trainCorrect
+    
+    
+    with torch.no_grad():
+        # putting the in model in evaluation mode
+        objectDetector.eval()
+
+        # loop over the validation set 
+        for (images,labels,bboxes) in testLoader:
+            # send the input to the divece 
+            (images,labels, bboxes) = ((images.to(Config.DEVICE)), labels.to(Config.DEVICE), bboxes.to(Config.DEVICE))
+
+            # make the predictions and calculate the validation loss 
+            predictions = objectDetector(images)
+            bboxesLoss = bboxesLossFunc(predictions[0], bboxes)
+            classLoss = classLossFunc(predictions[1], labels)
+
+            totalLoss = (Config.BBOX * bboxesLoss) + (Config.LABELS * classLoss) + totalLoss
+
+            totalValLoss = totalLoss + totalValLoss
+
+            # calculate the number of correct predictions  
+            valCorrect = (predictions[1].argmax(1) == labels).type(torch.float).sum().item() + valCorrect
+
+
+    # calculate the average training and validation loss 
+    avgTrainLoss = totalTrainLoss / trainSteps 
+    avgValLoss = totalValLoss / valSteps
+
+
+    # calculate the training and validation accuracy 
+
