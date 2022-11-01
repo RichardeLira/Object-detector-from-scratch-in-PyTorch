@@ -5,7 +5,6 @@ from operator import le
 from tracemalloc import start
 from ObjectDetector import objectDetector
 from Custom_tensor_dataset import CustomTensorDataset
-from Config import Config 
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import DataLoader
 from torchvision import transforms

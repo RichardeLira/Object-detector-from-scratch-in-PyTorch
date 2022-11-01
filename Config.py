@@ -9,8 +9,7 @@ BASE_PATH = r"C:\Users\richa\OneDrive\Documentos\Object-detector-from-scratch-in
 IMAGES_PATH = os.path.sep.join([BASE_PATH, "images"])
 ANNOTS_PATH = os.path.sep.join([BASE_PATH, "annotations"])
 
-BASE_OUTPUT = "output"
-
+BASE_OUTPUT = r"C:\Users\richa\OneDrive\Documentos\Object-detector-from-scratch-in-PyTorch\output"
 
 MODEL_PATH = os.path.sep.join([BASE_OUTPUT, "detector.pth"])
 LE_PATH = os.path.sep.join([BASE_OUTPUT, "le.pickle"])

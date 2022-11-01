@@ -11,13 +11,13 @@ import cv2
 
 # USAGE
 # python predict.py --input C:\Users\richa\OneDrive\Documentos\Object-detector-from-scratch-in-PyTorch\plane.jpg
+ 
+ 
 
-from argparse import FileType
-
-
+  
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--input", required=True,
-help=r"python Predict.ipy -I/--input C:\Users\richa\OneDrive\Documentos\Object-detector-from-scratch-in-PyTorch\plane.jpg")
+help=r"path to input image/text file of image paths")
 args = vars(ap.parse_args())
 
 # determine the input file type, but assume that we are working with single input image
